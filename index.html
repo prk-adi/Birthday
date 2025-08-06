@@ -3,7 +3,6 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-
     <meta name="theme-color" content="#d23369">
     <meta name="description" content="Happy Birthday Anju - A special gift from Aditya Gulshan">
     <meta name="apple-mobile-web-app-capable" content="yes">
@@ -1054,16 +1053,6 @@
             20% { transform: translateY(-10px) scale(1); opacity: 0.8; }
             100% { transform: translateY(-100px) scale(1.5); opacity: 0; }
         }
-        #chrome-music-enabler {
-    animation: pulse 2s infinite;
-    font-family: 'Dancing Script', cursive;
-}
-
-@keyframes pulse {
-    0% { transform: scale(1); }
-    50% { transform: scale(1.05); }
-    100% { transform: scale(1); }
-}
     </style>
 </head>
 <body>
@@ -1129,16 +1118,13 @@
             <i class="fas fa-music"></i>
         </button>
     </div>
-    <div id="music-notice" style="position: fixed; bottom: 80px; left: 20px; background: white; padding: 5px 10px; border-radius: 20px; box-shadow: 0 2px 10px rgba(0,0,0,0.2); z-index: 100; font-size: 12px;">
-    Click anywhere to enable music
-</div>
     
     <div class="container">
         <h1 class="animate__animated animate__fadeInDown">Happy Birthday, <span id="personal-greeting">My Beautiful Anjali</span>!</h1>
         <p class="inside-joke" id="inside-joke"></p>
         
         <div class="photo-frame animate__animated animate__zoomIn">
-            <img src="IMG-20241107-WA0091.png" alt="Beautiful woman smiling" loading="lazy">
+            <img src="IMG-20241107-WA0091.png" alt="Beautiful Anjali smiling" loading="lazy">
         </div>
         
         <div class="section animate__animated animate__fadeInUp">
@@ -1242,25 +1228,32 @@
 
     <!-- Audio Elements -->
     <audio id="background-music" loop>
-        <source src="diyaalicious.07-14062025-0001(2).mp3" type="audio/mpeg">
+        <source src="diy.mp3" type="audio/mpeg">
+        Your browser does not support the audio element.
     </audio>
     <audio id="sfx-match">
         <source src="https://www.soundjay.com/buttons/sounds/button-09.mp3" type="audio/mpeg">
+        Your browser does not support the audio element.
     </audio>
     <audio id="sfx-flip">
         <source src="https://www.soundjay.com/buttons/sounds/button-10.mp3" type="audio/mpeg">
+        Your browser does not support the audio element.
     </audio>
     <audio id="sfx-complete">
         <source src="https://www.soundjay.com/buttons/sounds/button-21.mp3" type="audio/mpeg">
+        Your browser does not support the audio element.
     </audio>
     <audio id="birthday-music">
         <source src="happy-birthday-314197.mp3" type="audio/mpeg">
+        Your browser does not support the audio element.
     </audio>
     <audio id="sfx-blow">
         <source src="https://www.soundjay.com/human/sounds/blow-01.mp3" type="audio/mpeg">
+        Your browser does not support the audio element.
     </audio>
     <audio id="sfx-cut">
         <source src="https://www.soundjay.com/mechanical/sounds/knife-slice-01.mp3" type="audio/mpeg">
+        Your browser does not support the audio element.
     </audio>
 
     <script>
@@ -1289,79 +1282,63 @@
                 insideJokes[Math.floor(Math.random() * insideJokes.length)];
         }
 
-       // Audio Controller
-const audio = {
-    init() {
-        this.bgMusic = document.getElementById('background-music');
-        // ... other audio elements initialization ...
-
-        // Set volumes
-        this.bgMusic.volume = 0.3;
-        // ... other volume settings ...
-
-        // Mute toggle
-        const musicToggle = document.getElementById('music-toggle');
-        musicToggle.addEventListener('click', () => {
-            this.toggleMusic();
-        });
-
-        // Special Chrome handling
-        this.chromeMusicHandler();
-    },
-
-    chromeMusicHandler() {
-        // Chrome requires direct user interaction to play audio
-        const enableMusic = () => {
-            const playPromise = this.bgMusic.play();
-            
-            if (playPromise !== undefined) {
-                playPromise.catch(error => {
-                    // Show that music is muted
-                    this.updateMusicIcon(false);
-                    console.log("Autoplay prevented:", error);
+        // Audio Controller
+        const audio = {
+            init() {
+                this.bgMusic = document.getElementById('background-music');
+                this.sfxMatch = document.getElementById('sfx-match');
+                this.sfxFlip = document.getElementById('sfx-flip');
+                this.sfxComplete = document.getElementById('sfx-complete');
+                this.birthdayMusic = document.getElementById('birthday-music');
+                this.sfxBlow = document.getElementById('sfx-blow');
+                this.sfxCut = document.getElementById('sfx-cut');
+                
+                // Set volumes
+                this.bgMusic.volume = 0.3;
+                this.sfxMatch.volume = 0.5;
+                this.sfxFlip.volume = 0.3;
+                this.sfxComplete.volume = 0.7;
+                this.birthdayMusic.volume = 0.5;
+                this.sfxBlow.volume = 0.7;
+                this.sfxCut.volume = 0.5;
+                
+                // Mute toggle
+                document.getElementById('music-toggle').addEventListener('click', () => {
+                    this.bgMusic.muted = !this.bgMusic.muted;
+                    this.birthdayMusic.muted = this.bgMusic.muted;
+                    const icon = document.querySelector('#music-toggle i');
+                    icon.classList.toggle('fa-music');
+                    icon.classList.toggle('fa-volume-mute');
                 });
-            }
+                
+                // Try to play music (may be blocked by browser autoplay policy)
+                const playPromise = this.bgMusic.play();
+                
+                if (playPromise !== undefined) {
+                    playPromise.catch(error => {
+                        console.log("Autoplay prevented:", error);
+                        // Show some UI element to let user know they need to interact to play music
+                    });
+                }
+            },
             
-            // Remove this listener after first interaction
-            document.body.removeEventListener('click', enableMusic);
-            document.body.removeEventListener('touchstart', enableMusic);
+            playSfx(type) {
+                const sfx = this[`sfx${type.charAt(0).toUpperCase() + type.slice(1)}`];
+                if (sfx) {
+                    sfx.currentTime = 0;
+                    sfx.play().catch(e => console.log("Audio play prevented:", e));
+                }
+            },
+            
+            playBirthdayMusic() {
+                this.birthdayMusic.currentTime = 0;
+                this.birthdayMusic.play().catch(e => console.log("Birthday music play prevented:", e));
+            },
+            
+            stopBirthdayMusic() {
+                this.birthdayMusic.pause();
+            }
         };
-
-        // Add both mouse and touch listeners for mobile
-        document.body.addEventListener('click', enableMusic);
-        document.body.addEventListener('touchstart', enableMusic);
-    },
-
-    toggleMusic() {
-        if (this.bgMusic.paused) {
-            const playPromise = this.bgMusic.play();
-            
-            if (playPromise !== undefined) {
-                playPromise.then(() => {
-                    this.updateMusicIcon(true);
-                }).catch(error => {
-                    this.updateMusicIcon(false);
-                    console.log("Playback failed:", error);
-                });
-            }
-        } else {
-            this.bgMusic.pause();
-            this.updateMusicIcon(false);
-        }
-    },
-
-    updateMusicIcon(isPlaying) {
-        const icon = document.querySelector('#music-toggle i');
-        if (isPlaying) {
-            icon.classList.add('fa-music');
-            icon.classList.remove('fa-volume-mute');
-        } else {
-            icon.classList.remove('fa-music');
-            icon.classList.add('fa-volume-mute');
-        }
-    },
-    // ... rest of your audio methods ...
-};
 
         // Memory Game
         const memoryGame = {
@@ -1374,8 +1351,8 @@ const audio = {
             timeElapsed: 0,
             images: [
                 'img1.jpg',
-                'img3.jpg',
                 'img2.jpg',
+                'img3.jpg',
                 'img4.jpg',
                 'img5.jpg',
                 'img6.webp'
@@ -2042,25 +2019,6 @@ const audio = {
                 createHeartBurst();
             });
         });
-        document.body.addEventListener('click', function() {
-    document.getElementById('music-notice').style.display = 'none';
-}, { once: true });
-// Detect Chrome specifically
-const isChrome = /Chrome/.test(navigator.userAgent) && /Google Inc/.test(navigator.vendor);
-
-if (isChrome) {
-    const enabler = document.getElementById('chrome-music-enabler');
-    enabler.style.display = 'block';
-    
-    enabler.addEventListener('click', () => {
-        audio.bgMusic.play().then(() => {
-            enabler.style.display = 'none';
-            audio.updateMusicIcon(true);
-        }).catch(e => {
-            alert("Please allow audio to play in your browser settings");
-        });
-    });
-}
     </script>
 </body>
 </html>
