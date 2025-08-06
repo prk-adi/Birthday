@@ -1228,7 +1228,7 @@
 
     <!-- Audio Elements -->
     <audio id="background-music" loop>
-        <source src="diy.mp3" type="audio/mpeg">
+        <source src="diyaalicious.07-14062025-0001(2).mp3" type="audio/mpeg">
     </audio>
     <audio id="sfx-match">
         <source src="https://www.soundjay.com/buttons/sounds/button-09.mp3" type="audio/mpeg">
@@ -1276,60 +1276,102 @@
         }
 
         // Audio Controller
-        const audio = {
-            init() {
-                this.bgMusic = document.getElementById('background-music');
-                this.sfxMatch = document.getElementById('sfx-match');
-                this.sfxFlip = document.getElementById('sfx-flip');
-                this.sfxComplete = document.getElementById('sfx-complete');
-                this.birthdayMusic = document.getElementById('birthday-music');
-                this.sfxBlow = document.getElementById('sfx-blow');
-                this.sfxCut = document.getElementById('sfx-cut');
-                
-                // Set volumes
-                this.bgMusic.volume = 0.3;
-                this.sfxMatch.volume = 0.5;
-                this.sfxFlip.volume = 0.3;
-                this.sfxComplete.volume = 0.7;
-                this.birthdayMusic.volume = 0.5;
-                this.sfxBlow.volume = 0.7;
-                this.sfxCut.volume = 0.5;
-                
-                // Mute toggle
-                document.getElementById('music-toggle').addEventListener('click', () => {
-                    this.bgMusic.muted = !this.bgMusic.muted;
-                    this.birthdayMusic.muted = this.bgMusic.muted;
-                    const icon = document.querySelector('#music-toggle i');
-                    icon.classList.toggle('fa-music');
-                    icon.classList.toggle('fa-volume-mute');
+const audio = {
+    init() {
+        this.bgMusic = document.getElementById('background-music');
+        this.sfxMatch = document.getElementById('sfx-match');
+        this.sfxFlip = document.getElementById('sfx-flip');
+        this.sfxComplete = document.getElementById('sfx-complete');
+        this.birthdayMusic = document.getElementById('birthday-music');
+        this.sfxBlow = document.getElementById('sfx-blow');
+        this.sfxCut = document.getElementById('sfx-cut');
+        
+        // Set volumes
+        this.bgMusic.volume = 0.3;
+        this.sfxMatch.volume = 0.5;
+        this.sfxFlip.volume = 0.3;
+        this.sfxComplete.volume = 0.7;
+        this.birthdayMusic.volume = 0.5;
+        this.sfxBlow.volume = 0.7;
+        this.sfxCut.volume = 0.5;
+        
+        // Mute toggle
+        const musicToggle = document.getElementById('music-toggle');
+        musicToggle.addEventListener('click', () => {
+            this.toggleMusic();
+        });
+        
+        // Enable music after user interaction
+        document.body.addEventListener('click', this.enableMusic.bind(this), { once: true });
+    },
+    
+    enableMusic() {
+        // Try to play music (may be blocked by browser autoplay policy)
+        const playPromise = this.bgMusic.play();
+        
+        if (playPromise !== undefined) {
+            playPromise.catch(error => {
+                // Show music button as muted since autoplay was prevented
+                const icon = document.querySelector('#music-toggle i');
+                icon.classList.remove('fa-music');
+                icon.classList.add('fa-volume-mute');
+                this.bgMusic.muted = true;
+            });
+        }
+    },
+    
+    toggleMusic() {
+        const icon = document.querySelector('#music-toggle i');
+        
+        if (this.bgMusic.paused) {
+            // If music is paused, try to play it
+            const playPromise = this.bgMusic.play();
+            
+            if (playPromise !== undefined) {
+                playPromise.then(() => {
+                    this.bgMusic.muted = false;
+                    icon.classList.add('fa-music');
+                    icon.classList.remove('fa-volume-mute');
+                }).catch(error => {
+                    // If play fails, keep it muted
+                    this.bgMusic.muted = true;
+                    icon.classList.remove('fa-music');
+                    icon.classList.add('fa-volume-mute');
                 });
-                
-                // Try to play music (may be blocked by browser autoplay policy)
-                const playPromise = this.bgMusic.play();
-                
-                if (playPromise !== undefined) {
-                    playPromise.catch(error => {
-                        console.log("Autoplay prevented:", error);
-                        // Show some UI element to let user know they need to interact to play music
-                    });
-                }
-            },
-            
-            playSfx(type) {
-                const sfx = this[`sfx${type.charAt(0).toUpperCase() + type.slice(1)}`];
-                sfx.currentTime = 0;
-                sfx.play().catch(e => console.log("Audio play prevented:", e));
-            },
-            
-            playBirthdayMusic() {
-                this.birthdayMusic.currentTime = 0;
-                this.birthdayMusic.play().catch(e => console.log("Birthday music play prevented:", e));
-            },
-            
-            stopBirthdayMusic() {
-                this.birthdayMusic.pause();
             }
-        };
+        } else {
+            // If music is playing, pause it
+            this.bgMusic.pause();
+            icon.classList.remove('fa-music');
+            icon.classList.add('fa-volume-mute');
+        }
+    },
+    
+    playSfx(type) {
+        const sfx = this[`sfx${type.charAt(0).toUpperCase() + type.slice(1)}`];
+        sfx.currentTime = 0;
+        sfx.play().catch(e => console.log("Audio play prevented:", e));
+    },
+    
+    playBirthdayMusic() {
+        this.birthdayMusic.currentTime = 0;
+        const playPromise = this.birthdayMusic.play();
+        
+        if (playPromise !== undefined) {
+            playPromise.catch(error => {
+                // Show that music is muted
+                const icon = document.querySelector('#music-toggle i');
+                icon.classList.remove('fa-music');
+                icon.classList.add('fa-volume-mute');
+                this.birthdayMusic.muted = true;
+            });
+        }
+    },
+    
+    stopBirthdayMusic() {
+        this.birthdayMusic.pause();
+    }
+};
 
         // Memory Game
         const memoryGame = {
@@ -2013,4 +2055,3 @@
     </script>
 </body>
 </html>
-
