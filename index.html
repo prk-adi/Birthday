@@ -3,6 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+
     <meta name="theme-color" content="#d23369">
     <meta name="description" content="Happy Birthday Anju - A special gift from Aditya Gulshan">
     <meta name="apple-mobile-web-app-capable" content="yes">
@@ -1053,6 +1054,16 @@
             20% { transform: translateY(-10px) scale(1); opacity: 0.8; }
             100% { transform: translateY(-100px) scale(1.5); opacity: 0; }
         }
+        #chrome-music-enabler {
+    animation: pulse 2s infinite;
+    font-family: 'Dancing Script', cursive;
+}
+
+@keyframes pulse {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.05); }
+    100% { transform: scale(1); }
+}
     </style>
 </head>
 <body>
@@ -1278,102 +1289,78 @@
                 insideJokes[Math.floor(Math.random() * insideJokes.length)];
         }
 
-        // Audio Controller
+       // Audio Controller
 const audio = {
     init() {
         this.bgMusic = document.getElementById('background-music');
-        this.sfxMatch = document.getElementById('sfx-match');
-        this.sfxFlip = document.getElementById('sfx-flip');
-        this.sfxComplete = document.getElementById('sfx-complete');
-        this.birthdayMusic = document.getElementById('birthday-music');
-        this.sfxBlow = document.getElementById('sfx-blow');
-        this.sfxCut = document.getElementById('sfx-cut');
-        
+        // ... other audio elements initialization ...
+
         // Set volumes
         this.bgMusic.volume = 0.3;
-        this.sfxMatch.volume = 0.5;
-        this.sfxFlip.volume = 0.3;
-        this.sfxComplete.volume = 0.7;
-        this.birthdayMusic.volume = 0.5;
-        this.sfxBlow.volume = 0.7;
-        this.sfxCut.volume = 0.5;
-        
+        // ... other volume settings ...
+
         // Mute toggle
         const musicToggle = document.getElementById('music-toggle');
         musicToggle.addEventListener('click', () => {
             this.toggleMusic();
         });
-        
-        // Enable music after user interaction
-        document.body.addEventListener('click', this.enableMusic.bind(this), { once: true });
+
+        // Special Chrome handling
+        this.chromeMusicHandler();
     },
-    
-    enableMusic() {
-        // Try to play music (may be blocked by browser autoplay policy)
-        const playPromise = this.bgMusic.play();
-        
-        if (playPromise !== undefined) {
-            playPromise.catch(error => {
-                // Show music button as muted since autoplay was prevented
-                const icon = document.querySelector('#music-toggle i');
-                icon.classList.remove('fa-music');
-                icon.classList.add('fa-volume-mute');
-                this.bgMusic.muted = true;
-            });
-        }
+
+    chromeMusicHandler() {
+        // Chrome requires direct user interaction to play audio
+        const enableMusic = () => {
+            const playPromise = this.bgMusic.play();
+            
+            if (playPromise !== undefined) {
+                playPromise.catch(error => {
+                    // Show that music is muted
+                    this.updateMusicIcon(false);
+                    console.log("Autoplay prevented:", error);
+                });
+            }
+            
+            // Remove this listener after first interaction
+            document.body.removeEventListener('click', enableMusic);
+            document.body.removeEventListener('touchstart', enableMusic);
+        };
+
+        // Add both mouse and touch listeners for mobile
+        document.body.addEventListener('click', enableMusic);
+        document.body.addEventListener('touchstart', enableMusic);
     },
-    
+
     toggleMusic() {
-        const icon = document.querySelector('#music-toggle i');
-        
         if (this.bgMusic.paused) {
-            // If music is paused, try to play it
             const playPromise = this.bgMusic.play();
             
             if (playPromise !== undefined) {
                 playPromise.then(() => {
-                    this.bgMusic.muted = false;
-                    icon.classList.add('fa-music');
-                    icon.classList.remove('fa-volume-mute');
+                    this.updateMusicIcon(true);
                 }).catch(error => {
-                    // If play fails, keep it muted
-                    this.bgMusic.muted = true;
-                    icon.classList.remove('fa-music');
-                    icon.classList.add('fa-volume-mute');
+                    this.updateMusicIcon(false);
+                    console.log("Playback failed:", error);
                 });
             }
         } else {
-            // If music is playing, pause it
             this.bgMusic.pause();
+            this.updateMusicIcon(false);
+        }
+    },
+
+    updateMusicIcon(isPlaying) {
+        const icon = document.querySelector('#music-toggle i');
+        if (isPlaying) {
+            icon.classList.add('fa-music');
+            icon.classList.remove('fa-volume-mute');
+        } else {
             icon.classList.remove('fa-music');
             icon.classList.add('fa-volume-mute');
         }
     },
-    
-    playSfx(type) {
-        const sfx = this[`sfx${type.charAt(0).toUpperCase() + type.slice(1)}`];
-        sfx.currentTime = 0;
-        sfx.play().catch(e => console.log("Audio play prevented:", e));
-    },
-    
-    playBirthdayMusic() {
-        this.birthdayMusic.currentTime = 0;
-        const playPromise = this.birthdayMusic.play();
-        
-        if (playPromise !== undefined) {
-            playPromise.catch(error => {
-                // Show that music is muted
-                const icon = document.querySelector('#music-toggle i');
-                icon.classList.remove('fa-music');
-                icon.classList.add('fa-volume-mute');
-                this.birthdayMusic.muted = true;
-            });
-        }
-    },
-    
-    stopBirthdayMusic() {
-        this.birthdayMusic.pause();
-    }
+    // ... rest of your audio methods ...
 };
 
         // Memory Game
@@ -2058,6 +2045,22 @@ const audio = {
         document.body.addEventListener('click', function() {
     document.getElementById('music-notice').style.display = 'none';
 }, { once: true });
+// Detect Chrome specifically
+const isChrome = /Chrome/.test(navigator.userAgent) && /Google Inc/.test(navigator.vendor);
+
+if (isChrome) {
+    const enabler = document.getElementById('chrome-music-enabler');
+    enabler.style.display = 'block';
+    
+    enabler.addEventListener('click', () => {
+        audio.bgMusic.play().then(() => {
+            enabler.style.display = 'none';
+            audio.updateMusicIcon(true);
+        }).catch(e => {
+            alert("Please allow audio to play in your browser settings");
+        });
+    });
+}
     </script>
 </body>
 </html>
